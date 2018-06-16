@@ -58,6 +58,7 @@ export class Game {
 
         self.cursors = this.input.keyboard.createCursorKeys()
         self.score = 0
+        self.gameOver = false
     }
 
     create (self) {
@@ -105,7 +106,7 @@ export class Game {
 
         const stars = this.physics.add.group({
             key: "star",
-            repeat: 11,
+            repeat: 1,
             setXY: { x: 12, y: 0, stepX: 70 }
         })
 
@@ -115,15 +116,24 @@ export class Game {
 
         self.stars = stars
 
+        const bombs = this.physics.add.group()
+        self.bombs = bombs
+
         self.scoreText = this.add.text(16, 16, "score: 0", { fontSize: "32px", fill: "#000" })
 
         this.physics.add.collider(player, platforms)
         this.physics.add.collider(stars, platforms)
+        this.physics.add.collider(bombs, platforms)
 
-        this.physics.add.overlap(player, stars, self.collectStar, null, self)
+        this.physics.add.overlap(player, stars, function (p, s) { self.collectStar.bind(this)(self, p, s) }, null, this)
+        this.physics.add.collider(player, bombs, function (p, b) { self.hitBomb.bind(this)(self, p, b) }, null, this)
     }
 
     update (self) {
+        if (self.gameOver) {
+            return
+        }
+
         if (self.cursors.left.isDown) {
             self.player.setVelocityX(-160)
             self.player.anims.play("left", true)
@@ -140,10 +150,33 @@ export class Game {
         }
     }
 
-    collectStar (player, star) {
+    collectStar (self, player, star) {
         console.log("Game.collectStar: " + star)
         star.disableBody(true, true)
-        this.score += 10
-        this.scoreText.setText("score: " + this.score)
+        self.score += 10
+        self.scoreText.setText("score: " + self.score)
+
+        if (self.stars.countActive(true) !== 0) {
+            return
+        }
+
+        self.stars.children.iterate(function (child) {
+            child.enableBody(true, child.x, 0, true, true)
+        })
+
+        const x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400)
+
+        const bomb = self.bombs.create(x, 16, "bomb")
+        bomb.setBounce(1)
+        bomb.setCollideWorldBounds(true)
+        bomb.setVelocity(Phaser.Math.Between(-200, 200), 20)
+        bomb.allowGravity = false
+    }
+
+    hitBomb (self, player, bomb) {
+        this.physics.pause()
+        player.setTint(0xff0000)
+        player.anims.play("turn")
+        self.gameOver = true
     }
 }
