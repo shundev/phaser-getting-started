@@ -57,6 +57,7 @@ export class Game {
         )
 
         self.cursors = this.input.keyboard.createCursorKeys()
+        self.score = 0
     }
 
     create (self) {
@@ -115,10 +116,12 @@ export class Game {
 
         self.stars = stars
 
+        self.scoreText = this.add.text(16, 16, "score: 0", { fontSize: "32px", fill: "#000" })
+
         this.physics.add.collider(player, platforms)
         this.physics.add.collider(stars, platforms)
 
-        this.physics.add.overlap(player, stars, self.collectStar, null, this)
+        this.physics.add.overlap(player, stars, self.collectStar, null, self)
     }
 
     update (self) {
@@ -141,5 +144,7 @@ export class Game {
     collectStar (player, star) {
         console.log("Game.collectStar: " + star)
         star.disableBody(true, true)
+        this.score += 10
+        this.scoreText.setText("score: " + this.score)
     }
 }
