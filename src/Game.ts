@@ -75,7 +75,6 @@ export class Game {
         const player = this.physics.add.sprite(100, 450, assets.dude.name)
         player.setBounce(0.2)
         player.setCollideWorldBounds(true)
-        player.body.setGravityY(300)
         self.player = player
 
         this.anims.create({
