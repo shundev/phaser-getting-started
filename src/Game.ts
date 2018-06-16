@@ -13,8 +13,10 @@ const assets = {
     dude: { name: "dude", path: dude_path },
 }
 
+
 export class Game {
     constructor () {
+        let self = this
         const config = {
             type: Phaser.AUTO,
             width: 800,
@@ -27,18 +29,23 @@ export class Game {
                 }
             },
             scene: {
-                preload: this.preload,
-                create: this.create,
-                update: this.update,
+                preload: function () {
+                    self.preload.bind(this)(self)
+                },
+                create: function () {
+                    self.create.bind(this)(self)
+                },
+                update: function () {
+                    self.update.bind(this)(self)
+                },
             }
         };
 
-        this.game = new Phaser.Game(config)
+        const game = new Phaser.Game(config)
     }
 
-    preload () {
+    preload (self) {
         console.log("Game.preload")
-
         this.load.image(assets.sky.name, assets.sky.path)
         this.load.image(assets.ground.name, assets.ground.path)
         this.load.image(assets.star.name, assets.star.path)
@@ -49,10 +56,10 @@ export class Game {
             { frameWidth: 32, frameHeight: 48 }
         )
 
-        this.cursors = this.input.keyboard.createCursorKeys()
+        self.cursors = this.input.keyboard.createCursorKeys()
     }
 
-    create () {
+    create (self) {
         console.log("Game.create")
 
         this.add.image(400, 300, assets.sky.name)
@@ -62,14 +69,13 @@ export class Game {
         platforms.create(600, 400, assets.ground.name)
         platforms.create(50, 250, assets.ground.name)
         platforms.create(750, 220, assets.ground.name)
-        this.platforms = platforms
+        self.platforms = platforms
 
         const player = this.physics.add.sprite(100, 450, assets.dude.name)
         player.setBounce(0.2)
         player.setCollideWorldBounds(true)
         player.body.setGravityY(300)
-        this.physics.add.collider(player, platforms)
-        this.player = player
+        self.player = player
 
         this.anims.create({
             key: "left",
@@ -96,21 +102,44 @@ export class Game {
             frameRate: 10,
             repeat: -1
         })
+
+        const stars = this.physics.add.group({
+            key: "star",
+            repeat: 11,
+            setXY: { x: 12, y: 0, stepX: 70 }
+        })
+
+        stars.children.iterate(function (child) {
+            child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8))
+        })
+
+        self.stars = stars
+
+        this.physics.add.collider(player, platforms)
+        this.physics.add.collider(stars, platforms)
+
+        this.physics.add.overlap(player, stars, self.collectStar, null, this)
     }
-    update () {
-        if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-160)
-            this.player.anims.play("left", true)
-        } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(160)
-            this.player.anims.play("right", true)
+
+    update (self) {
+        if (self.cursors.left.isDown) {
+            self.player.setVelocityX(-160)
+            self.player.anims.play("left", true)
+        } else if (self.cursors.right.isDown) {
+            self.player.setVelocityX(160)
+            self.player.anims.play("right", true)
         } else {
-            this.player.setVelocityX(0)
-            this.player.anims.play("turn")
+            self.player.setVelocityX(0)
+            self.player.anims.play("turn")
         }
 
-        if (this.cursors.up.isDown && this.player.body.touching.down) {
-            this.player.setVelocityY(-330)
+        if (self.cursors.up.isDown && self.player.body.touching.down) {
+            self.player.setVelocityY(-330)
         }
+    }
+
+    collectStar (player, star) {
+        console.log("Game.collectStar: " + star)
+        star.disableBody(true, true)
     }
 }
