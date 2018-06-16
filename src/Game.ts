@@ -1,3 +1,20 @@
+import sky from './assets/sky.png'
+import ground from './assets/platform.png'
+import star from './assets/star.png'
+import bomb from './assets/bomb.png'
+import dude from './assets/dude.png'
+
+
+const assets = {
+    sky: sky,
+    ground: ground,
+    star: star,
+    bomb: bomb,
+    dude: dude,
+}
+
+console.log(assets)
+
 export class Game {
     constructor () {
         const config = {
@@ -17,13 +34,13 @@ export class Game {
     preload () {
         console.log("Game.preload")
 
-        this.load.image("sky", "assets/sky.png")
-        this.load.image("ground", "assets/platform.png")
-        this.load.image("star", "assets/star.png")
-        this.load.image("bomb", "assets/bomb.png")
+        this.load.image("sky", assets.sky)
+        this.load.image("ground", assets.ground)
+        this.load.image("star", assets.star)
+        this.load.image("bomb", assets.bomb)
         this.load.image(
             "dude",
-            "assets/dude.png",
+            assets.dude,
             { frameWidth: 32, frameHeight: 48 }
         )
     }
